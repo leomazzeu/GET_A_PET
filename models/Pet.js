@@ -1,5 +1,5 @@
-const conn = require('../db/conn')
-const { Schema } = Mongoose
+const mongoose = require('../db/conn')
+const { Schema } = mongoose
 
 const Pet = mongoose.model(
   'Pet',

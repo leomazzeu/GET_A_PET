@@ -152,7 +152,7 @@ module.exports = class UserController {
 
     //check if user exists
     const token = getToken(req)
-    const user = getUserByToken(token)
+    const user = await getUserByToken(token)
 
     const { name, email, phone, password, confirmpassword } = req.body
 
@@ -163,6 +163,8 @@ module.exports = class UserController {
       res.status(422).json({message: 'O nome é obrigatório!'})
       return
     }
+
+    user.name = name
 
     if(!email) {
       res.status(422).json({message: 'O email é obrigatório!'})
@@ -184,20 +186,30 @@ module.exports = class UserController {
       return
     }
 
-    if(!password) {
-      res.status(422).json({message: 'A senha é obrigatória!'})
-      return
-    }
-
-    if(!confirmpassword) {
-      res.status(422).json({message: 'A confirmação da senha é obrigatória!'})
-      return
-    }
+    user.phone = phone
 
     if(password !== confirmpassword) {
       res.status(422).json({message: 'A senha e a confirmação de senha precisam ser iguais!'})
       return
+    } else if(password === confirmpassword && password !== null) {
+
+      //creating password
+      const salt = await bcrypt.genSalt(12)
+      const passwordHash = await bcrypt.hash(password, salt)
+
+      user.password = passwordHash
     }
 
+    try {
+      // return user updated data
+      await User.findOneAndUpdate({ id: user._id }, { $set: user }, { new: true })
+
+      res.status(200).json({ message: "Usuário atualizado com sucesso!" })
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({
+        message: error
+      })
+    }
   }
 }

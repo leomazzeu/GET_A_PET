@@ -6,6 +6,7 @@ const User = require('../models/User')
 // helpers
 const createUserToken = require('../helpers/create-user-token')
 const getToken = require('../helpers/get-token')
+const getUserByToken = require('../helpers/get-user-by-token')
 
 module.exports = class UserController {
 
@@ -136,9 +137,7 @@ module.exports = class UserController {
           return
         }
 
-        return(
-          res.status(200).json({ user })
-        )
+        return res.status(200).json({ user })
       }).catch(() => {
         return(
           res.status(422).json({message: 'Usuário não encontrado!'})
@@ -151,8 +150,54 @@ module.exports = class UserController {
   static async editUser(req, res) {
     const { id } = req.params
 
-    res.status(200).json({message: 'Update feito com sucesso!'})
-    return
+    //check if user exists
+    const token = getToken(req)
+    const user = getUserByToken(token)
+
+    const { name, email, phone, password, confirmpassword } = req.body
+
+    let image = ''
+
+    //validations
+    if(!name) {
+      res.status(422).json({message: 'O nome é obrigatório!'})
+      return
+    }
+
+    if(!email) {
+      res.status(422).json({message: 'O email é obrigatório!'})
+      return
+    }
+
+    // check if email has already taken
+    const userExists = await User.findOne({ email })
+
+    if(user.email === email || userExists) {
+      res.status(422).json({message: 'Este e-mail já está sendo utilizado, utilize um e-mail diferente!'})
+      return
+    }
+
+    user.email = email
+
+    if(!phone) {
+      res.status(422).json({message: 'O telefone é obrigatório!'})
+      return
+    }
+
+    if(!password) {
+      res.status(422).json({message: 'A senha é obrigatória!'})
+      return
+    }
+
+    if(!confirmpassword) {
+      res.status(422).json({message: 'A confirmação da senha é obrigatória!'})
+      return
+    }
+
+    if(password !== confirmpassword) {
+      res.status(422).json({message: 'A senha e a confirmação de senha precisam ser iguais!'})
+      return
+    }
 
   }
 }

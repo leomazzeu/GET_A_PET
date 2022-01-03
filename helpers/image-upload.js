@@ -17,7 +17,7 @@ const imageStorage = multer.diskStorage({
 
   },
   filename: (req, file, callback) => {
-    callback(null, Date.now() + path.extname(file.originalname))
+    callback(null, Date.now() + String(Math.floor(Math.random() * 1000)) + path.extname(file.originalname))
   }
 })
 

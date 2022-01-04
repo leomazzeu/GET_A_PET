@@ -4,7 +4,6 @@ const Pet = require('../models/Pet')
 const getToken = require('../helpers/get-token')
 const getUserByToken = require('../helpers/get-user-by-token')
 
-
 module.exports = class PetController {
 
   // create a pet
@@ -91,6 +90,22 @@ module.exports = class PetController {
 
     if(pets.length < 1) {
       return res.status(422).json({ message: "Nenhum Pet cadastrado!" })
+    }
+
+    res.status(200).json({ pets })
+  }
+
+  // get all user adoptions
+  static async getAllUserAdoptions(req, res) {
+    
+    //get user from token
+    const token = await getToken(req)
+    const user = await getUserByToken(token)
+
+    const pets = await Pet.find({ 'adopter._id': user._id }).sort('-createdAt')
+
+    if(pets.length < 1) {
+      return res.status(422).json({ message: "Você não tem nenhum pet adotado!" })
     }
 
     res.status(200).json({ pets })

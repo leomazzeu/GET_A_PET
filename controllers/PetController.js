@@ -158,4 +158,79 @@ module.exports = class PetController {
 
     res.status(200).json({ message: "Pet removido com sucesso!" })
   }
+
+  static async updatePet(req, res) {
+    const { id } = req.params
+
+    //check if id is valid
+    if(!ObjectId.isValid(id)) {
+      return res.status(422).json({ message: "ID inválido!" })
+    }
+
+    const { name, age, weight, color, available } = req.body
+
+    //check if pet exists
+    const pet = await Pet.findById(id)
+
+    if(!pet) {
+      return res.status(404).json({ message: "Pet não encontrado!" })
+    }
+
+    const images = req.files
+
+    const updatedData = {}
+
+    //check if logged in user registered the pet
+    const token = getToken(req)
+    const user = await getUserByToken(token)
+
+    if(pet.user._id.toString() !== user._id.toString()) {
+      return res.status(422).json({ message: "Houve um problema em processar a sua solicitação, tente novamente mais tarde!" })
+    }
+
+    //validations
+    if(!name) {
+      res.status(422).json({message: "O nome é obrigatório!"})
+      return
+    } else {
+      updatedData.name = name
+    }
+
+    if(!age) {
+      res.status(422).json({message: "A idade do pet é obrigatória!"})
+      return
+    } else {
+      updatedData.age = age
+    }
+
+    if(!weight) {
+      res.status(422).json({message: "O peso do pet é obrigatório!"})
+      return
+    } else {
+      updatedData.weight = weight
+    }
+
+    if(!color) {
+      res.status(422).json({message: "A cor do pet é obrigatória!"})
+      return
+    } else {
+      updatedData.color = color
+    }
+
+    if(images.length === 0) {
+      res.status(422).json({message: "A imagem do pet é obrigatória!"})
+      return
+    } else {
+      updatedData.images = []
+      images.map((image) => {
+        updatedData.images.push(image.filename)
+      })
+    }
+
+    await Pet.findByIdAndUpdate(id, updatedData)
+    console.log(updatedData)
+
+    res.status(200).json({ message: "Pet editado com sucesso!" })
+  }
+
 }

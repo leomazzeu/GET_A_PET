@@ -72,4 +72,11 @@ module.exports = class PetController {
       res.status(500).json({message: error})
     }
   }
+
+  // get all pets
+  static async getAll(req, res) {
+    const pets = await Pet.find().sort('-createdAt') // Pega do mais novo para o mais velho
+
+    res.status(200).json({ pets })
+  }
 }
